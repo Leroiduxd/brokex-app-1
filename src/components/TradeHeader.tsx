@@ -369,16 +369,15 @@ export const TradeHeader = () => {
                 backgroundColor: themeControlBg, border: `1px solid ${themeBorder}`,
                 cursor: 'default'
               }}>
-              <span
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: '#14F195',
-                  display: 'inline-block',
-                  boxShadow: '0 0 8px rgba(20,241,149,0.6)',
-                }}
-              />
+              <svg width="12" height="12" viewBox="0 0 397 311" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M64.6 237.9c2.4 2.4 5.7 3.7 9.2 3.7h314.8c5.8 0 8.7-7 4.6-11.1l-64.6-64.6c-2.4-2.4-5.7-3.7-9.2-3.7H4.6c-5.8 0-8.7 7-4.6 11.1l64.6 64.6zM323.7 73.1c-2.4-2.4-5.7-3.7-9.2-3.7H9.7c-5.8 0-8.7 7-4.6 11.1l64.6 64.6c2.4 2.4 5.7 3.7 9.2 3.7h304.8c5.8 0 8.7-7 4.6-11.1L323.7 73.1zM323.7 155.5c2.4 2.4 5.7 3.7 9.2 3.7H4.6c-5.8 0-8.7 7-4.6 11.1l64.6 64.6c2.4 2.4 5.7 3.7 9.2 3.7h314.8c5.8 0 8.7-7 4.6-11.1l-64.6-64.6c-2.4-2.4-5.7-3.7-9.2-3.7h-0.1z" fill="url(#paint0_linear)"/>
+                <defs>
+                  <linearGradient id="paint0_linear" x1="396.7" y1="155.5" x2="0" y2="155.5" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#9945FF"/>
+                    <stop offset="1" stopColor="#14F195"/>
+                  </linearGradient>
+                </defs>
+              </svg>
               <span style={{ fontSize: '0.65rem', color: themeText, fontWeight: 500 }}>{selectedNetwork}</span>
             </div>
           </div>
