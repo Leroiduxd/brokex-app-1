@@ -27,7 +27,7 @@ export const usePythBenchmarks = () => {
     
     const fetchBenchmarks = async () => {
       try {
-        const res = await fetch('https://benchmarks.pyth.network/v1/price_differences/');
+        const res = await fetch('https://backend.brokex.trade/pyth/history?symbol=Crypto.BTC/USD&resolution=60&from=1714521600&to=1715299200');
         const data = await res.json();
         
         if (active && Array.isArray(data)) {
