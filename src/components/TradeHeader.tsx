@@ -12,6 +12,10 @@ import { mapPair, formatCompactNumber, formatPrice } from '../utils/ostium/utils
 import { AssetSelectionModal } from '../components/AssetSelectionModal';
 import { AssetIcon } from './AssetIcon';
 
+// Color Constants
+const goldAccent = '#BC8961';
+const goldAccentLight = 'rgba(188, 137, 97, 0.1)';
+
 // ============================================================================
 // 1. COMPOSANT : TRADE HEADER
 // ============================================================================
@@ -21,6 +25,9 @@ export const TradeHeader = () => {
   const { prices, selectedAsset, setSelectedAsset, currentPriceData } = usePriceContext();
   const { getPairs } = useOstiumSubgraph();
   const { get24hChange } = usePythBenchmarks();
+
+  // NEW: View mode state (Chart vs List)
+  const [viewMode, setViewMode] = useState<'chart' | 'list'>('chart');
 
   const { symbol } = useParams<{ symbol?: string }>();
   const navigate = useNavigate();
@@ -130,7 +137,20 @@ export const TradeHeader = () => {
   const isMarketOpen = currentPriceData ? (currentPriceData.isMarketOpen && !currentPriceData.isDayTradingClosed) : true;
 
   // On récupère la paire Subgraph complète (qui contient l'ID correct)
-  const selectedPair = pairs.find(p => p.from === selectedAsset);
+  const selectedPair = useMemo(() => {
+    const found = pairs.find(p => p.from === selectedAsset) || pairs[0];
+    if (found) return found;
+    return {
+      from: selectedAsset,
+      to: 'USD',
+      group: 'Crypto',
+      highestLeverage: '100',
+      maxLeverage: '100',
+      longOI: 0,
+      shortOI: 0
+    };
+  }, [pairs, selectedAsset]);
+
   const livePrice = currentPriceData?.mid ? Number(currentPriceData.mid) : 0;
   const totalLongOIUsd = selectedPair ? (selectedPair.longOI * livePrice) : 0;
   const totalShortOIUsd = selectedPair ? (selectedPair.shortOI * livePrice) : 0;
@@ -200,10 +220,10 @@ export const TradeHeader = () => {
             style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '0.3rem 0.5rem 0.3rem 0', borderRadius: '4px', flexShrink: 0 }}
             onClick={() => setIsMenuOpen((prev) => !prev)}
           >
-            <AssetIcon 
-              symbol={selectedAsset} 
-              size="28px" 
-              borderRadius="6px" 
+            <AssetIcon
+              symbol={selectedAsset}
+              size="28px"
+              borderRadius="6px"
               themeControlBg={themeControlBg}
               themeText={themeText}
               themeBorder={themeBorder}
@@ -370,27 +390,55 @@ export const TradeHeader = () => {
                 cursor: 'default'
               }}>
               <svg width="12" height="12" viewBox="0 0 397 311" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M64.6 237.9c2.4 2.4 5.7 3.7 9.2 3.7h314.8c5.8 0 8.7-7 4.6-11.1l-64.6-64.6c-2.4-2.4-5.7-3.7-9.2-3.7H4.6c-5.8 0-8.7 7-4.6 11.1l64.6 64.6zM323.7 73.1c-2.4-2.4-5.7-3.7-9.2-3.7H9.7c-5.8 0-8.7 7-4.6 11.1l64.6 64.6c2.4 2.4 5.7 3.7 9.2 3.7h304.8c5.8 0 8.7-7 4.6-11.1L323.7 73.1zM323.7 155.5c2.4 2.4 5.7 3.7 9.2 3.7H4.6c-5.8 0-8.7 7-4.6 11.1l64.6 64.6c2.4 2.4 5.7 3.7 9.2 3.7h314.8c5.8 0 8.7-7 4.6-11.1l-64.6-64.6c-2.4-2.4-5.7-3.7-9.2-3.7h-0.1z" fill="url(#paint0_linear)"/>
+                <path d="M64.6 237.9c2.4 2.4 5.7 3.7 9.2 3.7h314.8c5.8 0 8.7-7 4.6-11.1l-64.6-64.6c-2.4-2.4-5.7-3.7-9.2-3.7H4.6c-5.8 0-8.7 7-4.6 11.1l64.6 64.6zM323.7 73.1c-2.4-2.4-5.7-3.7-9.2-3.7H9.7c-5.8 0-8.7 7-4.6 11.1l64.6 64.6c2.4 2.4 5.7 3.7 9.2 3.7h304.8c5.8 0 8.7-7 4.6-11.1L323.7 73.1zM323.7 155.5c2.4 2.4 5.7 3.7 9.2 3.7H4.6c-5.8 0-8.7 7-4.6 11.1l64.6 64.6c2.4 2.4 5.7 3.7 9.2 3.7h314.8c5.8 0 8.7-7 4.6-11.1l-64.6-64.6c-2.4-2.4-5.7-3.7-9.2-3.7h-0.1z" fill="url(#paint0_linear)" />
                 <defs>
                   <linearGradient id="paint0_linear" x1="396.7" y1="155.5" x2="0" y2="155.5" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#9945FF"/>
-                    <stop offset="1" stopColor="#14F195"/>
+                    <stop stopColor="#9945FF" />
+                    <stop offset="1" stopColor="#14F195" />
                   </linearGradient>
                 </defs>
               </svg>
               <span style={{ fontSize: '0.65rem', color: themeText, fontWeight: 500 }}>{selectedNetwork}</span>
             </div>
           </div>
+
+          {/* View Mode Toggle */}
+          <div style={{ display: 'flex', backgroundColor: themeControlBg, padding: '2px', borderRadius: '4px', border: `1px solid ${themeBorder}`, height: '24px' }}>
+            <button
+              onClick={() => { setViewMode('chart'); window.dispatchEvent(new CustomEvent('trade-view-change', { detail: 'chart' })); }}
+              title="Price Chart"
+              style={{
+                backgroundColor: viewMode === 'chart' ? goldAccent : 'transparent',
+                color: viewMode === 'chart' ? '#fff' : themeTextMuted,
+                border: 'none', borderRadius: '3px', padding: '0 6px', cursor: 'pointer', transition: 'all 0.1s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 3v18h18" /><path d="M18 17l-6-6-3 3-4-4" /></svg>
+            </button>
+            <button
+              onClick={() => { setViewMode('list'); window.dispatchEvent(new CustomEvent('trade-view-change', { detail: 'list' })); }}
+              title="Market List"
+              style={{
+                backgroundColor: viewMode === 'list' ? goldAccent : 'transparent',
+                color: viewMode === 'list' ? '#fff' : themeTextMuted,
+                border: 'none', borderRadius: '3px', padding: '0 6px', cursor: 'pointer', transition: 'all 0.1s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>
+            </button>
+          </div>
         </div>
 
       </div>
 
-      {isMenuOpen && document.getElementById('tvchart-container') ? (
+      {(isMenuOpen || viewMode === 'list') && document.getElementById('tvchart-container') ? (
         createPortal(
           <AssetSelectionModal
             inline
-            isOpen={isMenuOpen}
-            onClose={() => setIsMenuOpen(false)}
+            isOpen={true}
+            onClose={() => { if (viewMode === 'chart') setIsMenuOpen(false); }}
             pairs={pairs}
             isLoading={isLoading}
             groups={groups}

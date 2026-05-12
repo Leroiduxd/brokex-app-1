@@ -89,7 +89,7 @@ export function Market() {
     setFavorites(prev => {
       const next = new Set(prev);
       if (next.has(sym)) next.delete(sym); else next.add(sym);
-      try { localStorage.setItem('assetFavorites', JSON.stringify([...next])); } catch {}
+      try { localStorage.setItem('assetFavorites', JSON.stringify([...next])); } catch { }
       return next;
     });
   }, []);
@@ -136,8 +136,8 @@ export function Market() {
     const change24h = get24hChange(pair.from);
     const pythSym = ASSET_TO_PYTH_SYMBOL[pair.from];
     const sparkline = pythSym && benchmarks[pythSym]?.sparkline ? benchmarks[pythSym].sparkline : [];
-    
-    const takerFeePct = Number(pair.takerFeeP ?? 0); 
+
+    const takerFeePct = Number(pair.takerFeeP ?? 0);
     const makerFeePct = Number(pair.makerFeeP ?? 0);
 
     // Funding from API (1h rate = base / 8)
@@ -355,8 +355,8 @@ export function Market() {
                   <td style={{ padding: '0.3rem 0.6rem', textAlign: 'right' }}>
                     {pair.fundingLong1h !== 0
                       ? <span className="font-mono" style={{ color: pair.fundingLong1h >= 0 ? buyColor : sellColor, fontSize: '0.68rem', fontWeight: 600 }}>
-                          {pair.fundingLong1h >= 0 ? '+' : ''}{pair.fundingLong1h.toFixed(4)}%
-                        </span>
+                        {pair.fundingLong1h >= 0 ? '+' : ''}{pair.fundingLong1h.toFixed(4)}%
+                      </span>
                       : <span style={{ color: themeTextMuted }}>—</span>
                     }
                   </td>
@@ -364,8 +364,8 @@ export function Market() {
                   <td style={{ padding: '0.3rem 0.6rem', textAlign: 'right' }}>
                     {pair.fundingShort1h !== 0
                       ? <span className="font-mono" style={{ color: pair.fundingShort1h >= 0 ? buyColor : sellColor, fontSize: '0.68rem', fontWeight: 600 }}>
-                          {pair.fundingShort1h >= 0 ? '+' : ''}{pair.fundingShort1h.toFixed(4)}%
-                        </span>
+                        {pair.fundingShort1h >= 0 ? '+' : ''}{pair.fundingShort1h.toFixed(4)}%
+                      </span>
                       : <span style={{ color: themeTextMuted }}>—</span>
                     }
                   </td>

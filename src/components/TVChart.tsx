@@ -250,7 +250,7 @@ export const TVChart = ({ isOrderFormRight, setIsOrderFormRight }: any) => {
       try {
         const rawSymbol = ASSET_TO_PYTH_SYMBOL[selectedAsset] || 'Crypto.BTC/USD';
         const encodedSymbol = encodeURIComponent(rawSymbol);
-        const proxyUrl = `/api/pyth/v1/shims/tradingview/history?symbol=${encodedSymbol}&resolution=${resolution.value}&from=${from}&to=${to}`;
+        const proxyUrl = `https://backend.brokex.trade/pyth/history?symbol=${encodedSymbol}&resolution=${resolution.value}&from=${from}&to=${to}`;
 
         const res = await fetch(proxyUrl);
         if (!res.ok) throw new Error('Network error or CORS: ' + res.status);

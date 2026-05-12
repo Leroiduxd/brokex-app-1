@@ -34,6 +34,7 @@ export const OrderForm = () => {
   const [collateralAmount, setCollateralAmount] = useState('100');
   const [isPending, setIsPending] = useState(false);
   const [usdcBalance, setUsdcBalance] = useState('0.00');
+  const [hasUsdcAccount, setHasUsdcAccount] = useState(true);
   const [isCreatingUsdcAta, setIsCreatingUsdcAta] = useState(false);
   const [tpAmount, setTpAmount] = useState('');
   const [slAmount, setSlAmount] = useState('');
@@ -148,9 +149,19 @@ export const OrderForm = () => {
 
     const fetchBalance = async () => {
       try {
+        const info = await connection.getAccountInfo(traderUsdcAta);
+        if (!info) {
+          setHasUsdcAccount(false);
+          setUsdcBalance('0.00');
+          return;
+        }
+        setHasUsdcAccount(true);
         const bal = await connection.getTokenAccountBalance(traderUsdcAta, 'confirmed');
         setUsdcBalance(bal.value.uiAmountString ?? '0.00');
-      } catch {
+      } catch (err) {
+        console.error('Fetch balance error:', err);
+        // If it's a devnet/account not found issue, we assume no account
+        setHasUsdcAccount(false);
         setUsdcBalance('0.00');
       }
     };
@@ -210,11 +221,11 @@ export const OrderForm = () => {
       const trader = new PublicKey(provider.publicKey.toBase58());
       const collateralBase = BigInt(Math.floor(Number(collateralAmount || '0') * 1_000_000));
       const targetPriceMicro =
-        orderType === 'market' ? 0n : BigInt(Math.floor(Number(targetPrice || '0') * 1_000_000));
+        orderType === 'market' ? 0n : BigInt(Math.floor(Number(targetPrice || '0') * 1e18));
       const slPriceMicro =
-        slAmount && Number(slAmount) > 0 ? BigInt(Math.floor(Number(slAmount) * 1_000_000)) : 0n;
+        slAmount && Number(slAmount) > 0 ? BigInt(Math.floor(Number(slAmount) * 1e18)) : 0n;
       const tpPriceMicro =
-        tpAmount && Number(tpAmount) > 0 ? BigInt(Math.floor(Number(tpAmount) * 1_000_000)) : 0n;
+        tpAmount && Number(tpAmount) > 0 ? BigInt(Math.floor(Number(tpAmount) * 1e18)) : 0n;
 
       const connection = new Connection(getRpcEndpoint(), 'confirmed');
       const align = await validateAssetPythFeedAlignment(connection, selectedAsset);
@@ -347,18 +358,18 @@ export const OrderForm = () => {
   const rawFeeP = orderType === 'market'
     ? Number(selectedPair?.takerFeeP ?? 0)
     : Number(selectedPair?.makerFeeP ?? 0);
-  
+
   // Total fee includes builder fee (1/3 of Ostium fee, capped at 0.5%)
   const builderFeeP = Math.min(Math.floor(rawFeeP / 3), 500000);
   const totalRawFeeP = rawFeeP + builderFeeP;
-  
+
   const totalFeePct = totalRawFeeP / 1_000_000; // ex: 0.20 = 0.20%
   const feeRatio = totalFeePct / 100; // ex: 0.0020
 
   // ─── Net Size Calculation (Accounting for fees deducted from collateral) ───
   // Formula: Size = ((Collat - Oracle) * Lev) / (1 + Lev * FeeRatio)
   const netCollateralBase = Math.max(0, collatNum - ORACLE_FEE_USD);
-  const estimatedSizeUSDNum = collatNum > 0 
+  const estimatedSizeUSDNum = collatNum > 0
     ? (netCollateralBase * leverage) / (1 + (leverage * feeRatio))
     : 0;
 
@@ -484,84 +495,7 @@ export const OrderForm = () => {
         </div>
       </div>
 
-      {cluster === 'devnet' && solAddress ? (
-        <div
-          style={{
-            flexShrink: 0,
-            fontSize: '0.55rem',
-            color: themeTextMuted,
-            lineHeight: 1.4,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.35rem',
-            padding: '0.4rem',
-            border: `1px dashed ${themeBorder}`,
-            borderRadius: '4px',
-            backgroundColor: themeControlBg,
-          }}
-        >
-          <span>
-            Get devnet USDC without a swap: ensure a USDC token account exists, then use Circle&apos;s faucet (same mint as this app).
-          </span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-            <button
-              type="button"
-              disabled={isCreatingUsdcAta}
-              onClick={handleDevnetFundUsdc}
-              style={{
-                fontSize: '0.55rem',
-                padding: '0.25rem 0.45rem',
-                borderRadius: '4px',
-                border: `1px solid ${goldAccent}`,
-                backgroundColor: goldAccentLight,
-                color: goldAccent,
-                cursor: isCreatingUsdcAta ? 'wait' : 'pointer',
-                opacity: isCreatingUsdcAta ? 0.7 : 1,
-              }}
-            >
-              {isCreatingUsdcAta ? 'Signing…' : 'Create USDC account'}
-            </button>
-            <button
-              type="button"
-              onClick={() => window.open(CIRCLE_SOLANA_DEVNET_USDC_FAUCET_URL, '_blank', 'noopener,noreferrer')}
-              style={{
-                fontSize: '0.55rem',
-                padding: '0.25rem 0.45rem',
-                borderRadius: '4px',
-                border: `1px solid ${themeBorder}`,
-                backgroundColor: themeBg,
-                color: themeText,
-                cursor: 'pointer',
-              }}
-            >
-              Circle faucet
-            </button>
-            <button
-              type="button"
-              onClick={async () => {
-                const mint = SOLANA_USDC_MINT.toBase58();
-                try {
-                  await navigator.clipboard.writeText(mint);
-                  addToast({ type: 'success', title: 'Copied', message: 'USDC mint address copied.' });
-                } catch {
-                  addToast({ type: 'warning', title: 'USDC mint', message: mint });
-                }
-              }}
-              style={{
-                fontSize: '0.55rem',
-                padding: '0.25rem 0.45rem',
-                borderRadius: '4px',
-                border: `1px solid ${themeBorder}`,
-                backgroundColor: themeBg,
-                color: themeText,
-                cursor: 'pointer',
-              }}
-            >
-              Copy USDC mint
-            </button>
-          </div>
-        </div>
-      ) : null}
+
 
       {/* Target Price (Limit/Stop only) */}
       {orderType !== 'market' && (
@@ -678,14 +612,14 @@ export const OrderForm = () => {
 
       {/* OVERNIGHT LEVERAGE WARNING - ULTRA COMPACT */}
       {leverage > overnightMaxLeverageNum && (
-        <div style={{ 
-          flexShrink: 0, 
-          backgroundColor: 'rgba(188, 137, 97, 0.06)', 
-          border: `1px solid rgba(188, 137, 97, 0.2)`, 
-          borderRadius: '4px', 
-          padding: '0.4rem 0.6rem', 
-          color: goldAccent, 
-          fontSize: '0.62rem', 
+        <div style={{
+          flexShrink: 0,
+          backgroundColor: 'rgba(188, 137, 97, 0.06)',
+          border: `1px solid rgba(188, 137, 97, 0.2)`,
+          borderRadius: '4px',
+          padding: '0.4rem 0.6rem',
+          color: goldAccent,
+          fontSize: '0.62rem',
           lineHeight: '1.35',
           display: 'flex',
           flexDirection: 'column',
@@ -729,6 +663,13 @@ export const OrderForm = () => {
             }}
             style={{ flex: 1, backgroundColor: goldAccent, color: '#fff', border: 'none', borderRadius: '4px', padding: '0.7rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.2s' }}>
             Connect Phantom
+          </button>
+        ) : !hasUsdcAccount ? (
+          <button
+            onClick={handleDevnetFundUsdc}
+            disabled={isCreatingUsdcAta}
+            style={{ flex: 1, backgroundColor: goldAccent, color: '#fff', border: 'none', borderRadius: '4px', padding: '0.7rem', fontSize: '0.85rem', fontWeight: 600, cursor: isCreatingUsdcAta ? 'wait' : 'pointer', transition: 'opacity 0.2s', opacity: isCreatingUsdcAta ? 0.7 : 1 }}>
+            {isCreatingUsdcAta ? 'Creating Account...' : 'Create USDC Account'}
           </button>
         ) : (
           <button

@@ -27,7 +27,7 @@ import { fetchSolanaCorePositionsForTrader } from '../utils/solana/solanaPositio
 export const PositionsPanel = () => {
   const theme = useTheme();
   const { themeBg, themeControlBg, themeBorder, themeText, themeTextMuted, buyColor, buyColorBg, sellColor, sellColorBg } = theme;
-  
+
   const { getPairs } = useOstiumSubgraph();
   const { getTradeLiveMath } = useOstiumCalculations();
   const { addToast } = useToast();
@@ -39,7 +39,7 @@ export const PositionsPanel = () => {
   const [openTrades, setOpenTrades] = useState<any[]>([]);
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
-  const [pairsList, setPairsList] = useState<any[]>([]); 
+  const [pairsList, setPairsList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Nouveaux états pour les modales dédiées
@@ -80,8 +80,8 @@ export const PositionsPanel = () => {
   const getSymbol = (item: any) => {
     const from = getBaseAsset(item);
     if (from) {
-       const to = item.pair?.to || item.raw?.pair?.to || pairsList.find(x => x.from === from)?.to || 'USD';
-       return `${from}/${to}`;
+      const to = item.pair?.to || item.raw?.pair?.to || pairsList.find(x => x.from === from)?.to || 'USD';
+      return `${from}/${to}`;
     }
     return `Pair #${item.pair?.id || item.pairId || '?'}`;
   };
@@ -139,7 +139,7 @@ export const PositionsPanel = () => {
           },
         });
         txHash = sigs[sigs.length - 1];
-      } 
+      }
       else if (actionType === 'UPDATE_TP') {
         actionName = 'Update TP';
         const { connection, instruction } = await buildUpdateSlTpIx({
@@ -148,10 +148,10 @@ export const PositionsPanel = () => {
           tradeId,
           slPriceMicro:
             itemData.stopLossPrice && Number(itemData.stopLossPrice) > 0
-              ? BigInt(Math.floor(Number(itemData.stopLossPrice) * 1_000_000))
+              ? BigInt(Math.floor(Number(itemData.stopLossPrice) * 1e18))
               : 0n,
           tpPriceMicro:
-            Number(params.price) > 0 ? BigInt(Math.floor(Number(params.price) * 1_000_000)) : 0n,
+            Number(params.price) > 0 ? BigInt(Math.floor(Number(params.price) * 1e18)) : 0n,
         });
         const latest = await connection.getLatestBlockhash('confirmed');
         const tx = new Transaction({
@@ -176,10 +176,10 @@ export const PositionsPanel = () => {
           assetSymbol: baseAsset,
           tradeId,
           slPriceMicro:
-            Number(params.price) > 0 ? BigInt(Math.floor(Number(params.price) * 1_000_000)) : 0n,
+            Number(params.price) > 0 ? BigInt(Math.floor(Number(params.price) * 1e18)) : 0n,
           tpPriceMicro:
             itemData.takeProfitPrice && Number(itemData.takeProfitPrice) > 0
-              ? BigInt(Math.floor(Number(itemData.takeProfitPrice) * 1_000_000))
+              ? BigInt(Math.floor(Number(itemData.takeProfitPrice) * 1e18))
               : 0n,
         });
         const latest = await connection.getLatestBlockhash('confirmed');
@@ -226,7 +226,7 @@ export const PositionsPanel = () => {
       } else {
         throw new Error(`Action ${actionType} is not migrated to Solana yet`);
       }
-      
+
       addToast({
         type: 'success',
         title: actionName,
@@ -294,7 +294,7 @@ export const PositionsPanel = () => {
       }
     };
     fetchAll();
-    const iv = setInterval(fetchAll, 10000); 
+    const iv = setInterval(fetchAll, 10000);
     return () => { isMounted = false; clearInterval(iv); };
   }, [address, getPairs]);
 
@@ -424,56 +424,56 @@ export const PositionsPanel = () => {
             </div>
           ))}
         </div>
-        
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {isLoading && <span style={{ color: themeTextMuted, fontSize: '0.6rem' }}>Loading...</span>}
-          
+
           {/* Bouton Portfolio */}
-          <button 
-            onClick={() => window.location.href = '/portfolio'} 
-            style={{ 
-              height: '24px', 
-              padding: '0 8px', 
+          <button
+            onClick={() => window.location.href = '/portfolio'}
+            style={{
+              height: '24px',
+              padding: '0 8px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backgroundColor: themeBg, border: `1px solid ${themeBorder}`, borderRadius: '4px', 
+              backgroundColor: themeBg, border: `1px solid ${themeBorder}`, borderRadius: '4px',
               color: themeText, fontSize: '0.6rem', cursor: 'pointer', transition: 'all 0.15s',
               boxSizing: 'border-box'
             }}
           >
             Portfolio ↗
           </button>
-          
+
           {/* Bloc Filtres */}
-          <div style={{ 
-            height: '24px', 
-            display: 'flex', backgroundColor: themeBg, border: `1px solid ${themeBorder}`, 
+          <div style={{
+            height: '24px',
+            display: 'flex', backgroundColor: themeBg, border: `1px solid ${themeBorder}`,
             borderRadius: '4px', overflow: 'hidden', fontSize: '0.6rem',
             boxSizing: 'border-box'
           }}>
-            <div 
-              onClick={() => setFilterAsset('All')} 
-              style={{ 
+            <div
+              onClick={() => setFilterAsset('All')}
+              style={{
                 padding: '0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                backgroundColor: filterAsset === 'All' ? themeControlBg : 'transparent', 
-                color: filterAsset === 'All' ? themeText : themeTextMuted, 
-                cursor: 'pointer', borderRight: `1px solid ${themeBorder}` 
+                backgroundColor: filterAsset === 'All' ? themeControlBg : 'transparent',
+                color: filterAsset === 'All' ? themeText : themeTextMuted,
+                cursor: 'pointer', borderRight: `1px solid ${themeBorder}`
               }}
             >
               All
             </div>
-            <div 
-              onClick={() => setFilterAsset(selectedAsset)} 
-              style={{ 
+            <div
+              onClick={() => setFilterAsset(selectedAsset)}
+              style={{
                 padding: '0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                backgroundColor: filterAsset === selectedAsset ? themeControlBg : 'transparent', 
-                color: filterAsset === selectedAsset ? themeText : themeTextMuted, 
-                cursor: 'pointer' 
+                backgroundColor: filterAsset === selectedAsset ? themeControlBg : 'transparent',
+                color: filterAsset === selectedAsset ? themeText : themeTextMuted,
+                cursor: 'pointer'
               }}
             >
               {selectedAsset}
             </div>
           </div>
-          
+
         </div>
       </div>
 
@@ -488,7 +488,7 @@ export const PositionsPanel = () => {
           <div style={{ padding: '2rem', textAlign: 'center', color: themeTextMuted, fontSize: '0.75rem' }}>Please connect your wallet to view your positions.</div>
         ) : (
           <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.7rem' }}>
-            
+
             {activeTab === 'Open Positions' && (
               <>
                 <thead>
@@ -505,8 +505,8 @@ export const PositionsPanel = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTrades.length > 0 
-                    ? filteredTrades.map(renderPositionRow) 
+                  {filteredTrades.length > 0
+                    ? filteredTrades.map(renderPositionRow)
                     : <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: themeTextMuted }}>No open positions.</td></tr>}
                 </tbody>
               </>
@@ -526,8 +526,8 @@ export const PositionsPanel = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.length > 0 
-                    ? filteredOrders.map(renderOrderRow) 
+                  {filteredOrders.length > 0
+                    ? filteredOrders.map(renderOrderRow)
                     : <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: themeTextMuted }}>No pending orders.</td></tr>}
                 </tbody>
               </>
@@ -546,8 +546,8 @@ export const PositionsPanel = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredHistory.length > 0 
-                    ? filteredHistory.map(renderHistoryRow) 
+                  {filteredHistory.length > 0
+                    ? filteredHistory.map(renderHistoryRow)
                     : <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: themeTextMuted }}>No history available.</td></tr>}
                 </tbody>
               </>
@@ -563,13 +563,13 @@ export const PositionsPanel = () => {
         const symbol = activeTradeModal ? getSymbol(activeTradeModal) : '';
         const tradePriceData = prices[symbol];
         const isMarketOpen = tradePriceData ? (tradePriceData.isMarketOpen && !tradePriceData.isDayTradingClosed) : true;
-        
+
         const modalEl = (
-          <EditTradeModal 
+          <EditTradeModal
             inline={!!orderFormContainer}
-            isOpen={!!activeTradeModal} 
-            onClose={() => setActiveTradeModal(null)} 
-            trade={activeTradeModal} 
+            isOpen={!!activeTradeModal}
+            onClose={() => setActiveTradeModal(null)}
+            trade={activeTradeModal}
             symbol={symbol}
             liveMath={activeTradeModal ? getTradeLiveMath(activeTradeModal) : {}}
             onAction={(type: string, params: any) => executeAction(type, params, activeTradeModal)}
@@ -585,11 +585,11 @@ export const PositionsPanel = () => {
         const symbol = activeLimitModal ? getSymbol(activeLimitModal) : '';
 
         const limitModalEl = (
-          <EditLimitModal 
+          <EditLimitModal
             inline={!!orderFormContainer}
-            isOpen={!!activeLimitModal} 
-            onClose={() => setActiveLimitModal(null)} 
-            order={activeLimitModal} 
+            isOpen={!!activeLimitModal}
+            onClose={() => setActiveLimitModal(null)}
+            order={activeLimitModal}
             symbol={symbol}
             onAction={(type: string, params: any) => executeAction(type, params, activeLimitModal)}
             theme={theme}

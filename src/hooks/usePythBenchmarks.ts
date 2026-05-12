@@ -12,7 +12,7 @@ export const ASSET_TO_PYTH_SYMBOL: Record<string, string> = {
   "TRX": "Crypto.TRX/USD", "HYPE": "Crypto.HYPE/USD", "LINK": "Crypto.LINK/USD", "ADA": "Crypto.ADA/USD",
   "PLTR": "Equity.US.PLTR/USD", "AMD": "Equity.US.AMD/USD", "NFLX": "Equity.US.NFLX/USD", "ORCL": "Equity.US.ORCL/USD",
   "RIVN": "Equity.US.RIVN/USD", "COST": "Equity.US.COST/USD", "XAU": "Metal.XAU/USD", "XOM": "Equity.US.XOM/USD",
-  "CVX": "Equity.US.CVX/USD", "BRENT": "Commodities.UKOILSPOT", "CL": "Commodities.USOILSPOT",  "SOL": "Crypto.SOL/USD",
+  "CVX": "Equity.US.CVX/USD", "BRENT": "Commodities.UKOILSPOT", "CL": "Commodities.USOILSPOT", "SOL": "Crypto.SOL/USD",
   "DAX": "Equity.US.GDAXI/USD",
   "XAG": "Metal.XAG/USD",
   "CAT": "Equity.US.CAT/USD", "ASML": "Equity.US.ASML/USD", "ARM": "Equity.US.ARM/USD", "INTC": "Equity.US.INTC/USD",
@@ -24,17 +24,19 @@ export const usePythBenchmarks = () => {
 
   useEffect(() => {
     let active = true;
-    
+
     const fetchBenchmarks = async () => {
       try {
-        const res = await fetch('https://backend.brokex.trade/pyth/history?symbol=Crypto.BTC/USD&resolution=60&from=1714521600&to=1715299200');
+        const res = await fetch('https://backend.brokex.trade/pyth/benchmarks');
         const data = await res.json();
-        
+
         if (active && Array.isArray(data)) {
           // On transforme le gros tableau en objet facile à lire : { "Crypto.BTC/USD": { ... } }
           const map: Record<string, any> = {};
           data.forEach((item) => {
-            map[item.symbol] = item;
+            if (item.symbol) {
+              map[item.symbol] = item;
+            }
           });
           setBenchmarks(map);
         }
@@ -45,26 +47,36 @@ export const usePythBenchmarks = () => {
 
     fetchBenchmarks();
     const interval = setInterval(fetchBenchmarks, 60000); // Met à jour toutes les 60 secondes
-    
+
     return () => {
       active = false;
       clearInterval(interval);
     };
   }, []);
 
-  // Fonction ultra-rapide pour récupérer le % de variation sur un actif précis
+  // --- Variations sur différentes périodes ---
+  const get1hChange = useCallback((assetStr: string) => {
+    const pythSymbol = ASSET_TO_PYTH_SYMBOL[assetStr];
+    if (!pythSymbol || !benchmarks[pythSymbol]) return null;
+    const diff = benchmarks[pythSymbol].hour_price_diff_decimal;
+    return (diff !== undefined && diff !== null) ? diff * 100 : null;
+  }, [benchmarks]);
+
   const get24hChange = useCallback((assetStr: string) => {
     const pythSymbol = ASSET_TO_PYTH_SYMBOL[assetStr];
     if (!pythSymbol || !benchmarks[pythSymbol]) return null;
-
-    const diffDecimal = benchmarks[pythSymbol].day_price_diff_decimal;
-    if (diffDecimal === undefined || diffDecimal === null) return null;
-
-    // L'API renvoie un format décimal (0.0074 -> 0.74%), donc on fait x100
-    return diffDecimal * 100;
+    const diff = benchmarks[pythSymbol].day_price_diff_decimal;
+    return (diff !== undefined && diff !== null) ? diff * 100 : null;
   }, [benchmarks]);
 
-  return { benchmarks, get24hChange, ASSET_TO_PYTH_SYMBOL };
+  const get7dChange = useCallback((assetStr: string) => {
+    const pythSymbol = ASSET_TO_PYTH_SYMBOL[assetStr];
+    if (!pythSymbol || !benchmarks[pythSymbol]) return null;
+    const diff = benchmarks[pythSymbol].week_price_diff_decimal;
+    return (diff !== undefined && diff !== null) ? diff * 100 : null;
+  }, [benchmarks]);
+
+  return { benchmarks, get1hChange, get24hChange, get7dChange, ASSET_TO_PYTH_SYMBOL };
 };
 
 // ---------------------------------------------------------------------------

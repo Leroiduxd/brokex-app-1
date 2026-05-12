@@ -69,22 +69,47 @@ export async function sendHermesPythThenConsumeLegacy(params: {
   const { blockhash, lastValidBlockHeight } = await params.connection.getLatestBlockhash('confirmed');
   const signatures: string[] = [];
 
-  for (const { tx, signers } of built) {
-    tx.feePayer = params.trader;
-    tx.recentBlockhash = blockhash;
-    for (const s of signers) {
-      tx.partialSign(s);
-    }
-    const signed = await params.phantom.signTransaction(tx);
-    const sig = await params.connection.sendRawTransaction(signed.serialize(), {
-      skipPreflight: false,
-      preflightCommitment: 'confirmed',
+  if (built.length > 1 && params.phantom.signAllTransactions) {
+    const txs = built.map(({ tx }) => {
+      tx.feePayer = params.trader;
+      tx.recentBlockhash = blockhash;
+      return tx;
     });
-    await params.connection.confirmTransaction(
-      { signature: sig, blockhash, lastValidBlockHeight },
-      'confirmed',
-    );
-    signatures.push(sig);
+    // Partial sign if needed (e.g. for extra signers provided by builder)
+    built.forEach(({ tx, signers }, idx) => {
+      for (const s of signers) tx.partialSign(s);
+    });
+
+    const signedTxs = await params.phantom.signAllTransactions(txs);
+    for (const signed of signedTxs) {
+      const sig = await params.connection.sendRawTransaction(signed.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+      });
+      await params.connection.confirmTransaction(
+        { signature: sig, blockhash, lastValidBlockHeight },
+        'confirmed',
+      );
+      signatures.push(sig);
+    }
+  } else {
+    for (const { tx, signers } of built) {
+      tx.feePayer = params.trader;
+      tx.recentBlockhash = blockhash;
+      for (const s of signers) {
+        tx.partialSign(s);
+      }
+      const signed = await params.phantom.signTransaction(tx);
+      const sig = await params.connection.sendRawTransaction(signed.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+      });
+      await params.connection.confirmTransaction(
+        { signature: sig, blockhash, lastValidBlockHeight },
+        'confirmed',
+      );
+      signatures.push(sig);
+    }
   }
 
   return signatures;

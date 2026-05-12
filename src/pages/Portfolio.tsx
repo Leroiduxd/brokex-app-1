@@ -215,10 +215,10 @@ export function Portfolio() {
             tradeId,
             slPriceMicro:
               itemData.stopLossPrice && Number(itemData.stopLossPrice) > 0
-                ? BigInt(Math.floor(Number(itemData.stopLossPrice) * 1_000_000))
+                ? BigInt(Math.floor(Number(itemData.stopLossPrice) * 1e18))
                 : 0n,
             tpPriceMicro:
-              Number(params.price) > 0 ? BigInt(Math.floor(Number(params.price) * 1_000_000)) : 0n,
+              Number(params.price) > 0 ? BigInt(Math.floor(Number(params.price) * 1e18)) : 0n,
           });
           const latest = await connection.getLatestBlockhash('confirmed');
           const tx = new Transaction({
@@ -242,10 +242,10 @@ export function Portfolio() {
             assetSymbol: baseAsset,
             tradeId,
             slPriceMicro:
-              Number(params.price) > 0 ? BigInt(Math.floor(Number(params.price) * 1_000_000)) : 0n,
+              Number(params.price) > 0 ? BigInt(Math.floor(Number(params.price) * 1e18)) : 0n,
             tpPriceMicro:
               itemData.takeProfitPrice && Number(itemData.takeProfitPrice) > 0
-                ? BigInt(Math.floor(Number(itemData.takeProfitPrice) * 1_000_000))
+                ? BigInt(Math.floor(Number(itemData.takeProfitPrice) * 1e18))
                 : 0n,
           });
           const latest = await connection.getLatestBlockhash('confirmed');
@@ -460,13 +460,13 @@ export function Portfolio() {
   // ── Styles ─────────────────────────────────────────────────────────────────
   const thStyle: React.CSSProperties = {
     padding: '0.3rem 0.6rem', // Ligne plus fine
-    fontWeight: 500, 
+    fontWeight: 500,
     color: themeTextMuted,
     fontSize: '0.5rem', // Police plus petite
-    textTransform: 'uppercase', 
+    textTransform: 'uppercase',
     whiteSpace: 'nowrap',
-    borderBottom: `1px solid ${themeBorder}`, 
-    cursor: 'pointer', 
+    borderBottom: `1px solid ${themeBorder}`,
+    cursor: 'pointer',
     userSelect: 'none',
     textAlign: 'left' // Centré sur la gauche
   };
@@ -561,7 +561,7 @@ export function Portfolio() {
                   <tr><td colSpan={10} style={{ padding: '4rem', textAlign: 'center', color: themeTextMuted }}>No open trades.</td></tr>
                 ) : Object.entries(groupedBySymbol).map(([sym, trades]) => {
                   const isExpanded = expandedGroups[sym] !== false; // default open
-                  
+
                   // Calculate aggregate PnL and Margin
                   const totalPnl = trades.reduce((acc, t) => {
                     const pnlStr = t.math.pnl || '0';
@@ -607,19 +607,19 @@ export function Portfolio() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                             <button
                               onClick={() => toggleGroup(sym)}
-                              style={{ 
-                                width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                backgroundColor: '#2a2a2a', border: `1px solid ${themeBorder}`, borderRadius: '4px', 
-                                cursor: 'pointer', color: goldAccent, fontSize: '1.2rem', fontWeight: 300, lineHeight: 1 
+                              style={{
+                                width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                backgroundColor: '#2a2a2a', border: `1px solid ${themeBorder}`, borderRadius: '4px',
+                                cursor: 'pointer', color: goldAccent, fontSize: '1.2rem', fontWeight: 300, lineHeight: 1
                               }}
                             >
                               {isExpanded ? '-' : '+'}
                             </button>
-                            <span style={{ 
-                                backgroundColor: aggSideBg, color: aggSideColor, padding: '3px 8px', borderRadius: '4px', 
-                                fontSize: '0.65rem', fontWeight: 700, border: `1px solid ${aggSideColor}40`,
-                                boxShadow: trades.length > 1 ? `2px 2px 0px ${aggSideBg}` : 'none'
-                              }}>
+                            <span style={{
+                              backgroundColor: aggSideBg, color: aggSideColor, padding: '3px 8px', borderRadius: '4px',
+                              fontSize: '0.65rem', fontWeight: 700, border: `1px solid ${aggSideColor}40`,
+                              boxShadow: trades.length > 1 ? `2px 2px 0px ${aggSideBg}` : 'none'
+                            }}>
                               {netSize >= 0 ? '+' : ''}{netSize.toFixed(2)}
                             </span>
                           </div>
@@ -638,9 +638,11 @@ export function Portfolio() {
                         </td>
                         <td style={{ padding: '0.6rem 1rem 0.6rem 0.6rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <button
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              trades.forEach(t => executeAction('CLOSE', { percent: 100 }, t)); 
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              for (const t of trades) {
+                                await executeAction('CLOSE', { percent: 100 }, t);
+                              }
                             }}
                             style={{ backgroundColor: 'transparent', color: themeText, border: `1px solid ${themeBorder}`, borderRadius: '4px', padding: '0.22rem 0.6rem', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 600 }}
                           >
@@ -656,7 +658,7 @@ export function Portfolio() {
                         const pnlVal = parseFloat(pnlStr.replace(/[^0-9.-]/g, '')) || 0;
                         const tradePnl = pnlStr.startsWith('-') ? -Math.abs(pnlVal) : Math.abs(pnlVal);
                         const dynamicMargin = Number(trade.collateral || 0) + tradePnl;
-                        
+
                         const pColor = tradePnl >= 0 ? buyColor : sellColor;
                         const sideColor = trade.isBuy ? buyColor : sellColor;
                         const sideBg = trade.isBuy ? buyColorBg : sellColorBg;
@@ -673,7 +675,7 @@ export function Portfolio() {
                             <td style={{ padding: '0.5rem 0.6rem 0.5rem 1.6rem', whiteSpace: 'nowrap' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <svg width="14" height="18" viewBox="0 0 14 18" fill="none" style={{ opacity: 0.4, flexShrink: 0, transform: 'translateY(-3px)' }}>
-                                  <path d="M4 0V10H14" stroke={themeTextMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 3"/>
+                                  <path d="M4 0V10H14" stroke={themeTextMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 3" />
                                 </svg>
                                 <span style={{ backgroundColor: sideBg, color: sideColor, padding: '2px 8px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700 }}>
                                   {trade.isBuy ? '+' : '-'}{Number(trade.tradeNotional || trade.notional || 0).toFixed(2)}
@@ -745,9 +747,9 @@ export function Portfolio() {
               </tbody>
             </table>
 
-          // ─────────────────────────────────────────────────────────────
-          // ORDERS TAB
-          // ─────────────────────────────────────────────────────────────
+            // ─────────────────────────────────────────────────────────────
+            // ORDERS TAB
+            // ─────────────────────────────────────────────────────────────
           ) : activeTab === 'Orders' ? (
             <table style={{ width: '100%', minWidth: '860px', borderCollapse: 'collapse', fontSize: '0.7rem', color: themeText }}>
               <thead>
@@ -799,9 +801,9 @@ export function Portfolio() {
               </tbody>
             </table>
 
-          // ─────────────────────────────────────────────────────────────
-          // HISTORY TAB
-          // ─────────────────────────────────────────────────────────────
+            // ─────────────────────────────────────────────────────────────
+            // HISTORY TAB
+            // ─────────────────────────────────────────────────────────────
           ) : (
             <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', fontSize: '0.7rem', color: themeText }}>
               <thead>
@@ -832,11 +834,11 @@ export function Portfolio() {
                       <td style={td} className="font-mono">{h.orderAction}</td>
                       <td style={td}><span style={{ color: h.isBuy ? buyColor : sellColor, fontSize: '0.6rem' }}>{h.isBuy ? 'Long' : 'Short'}</span></td>
                       <td style={td} className="font-mono">
-                    1:
-                    {Math.round(
-                      h.source === 'solana-core' ? Number(h.leverage || 0) : Number(h.leverage || 0) / 100
-                    )}
-                  </td>
+                        1:
+                        {Math.round(
+                          h.source === 'solana-core' ? Number(h.leverage || 0) : Number(h.leverage || 0) / 100
+                        )}
+                      </td>
                       <td style={td} className="font-mono">${Number(h.price).toFixed(4)}</td>
                       <td style={{ ...td, color: buyColor }} className="font-mono">{h.tp ? Number(h.tp).toFixed(4) : ''}</td>
                       <td style={{ ...td, color: sellColor }} className="font-mono">{h.sl ? Number(h.sl).toFixed(4) : ''}</td>
