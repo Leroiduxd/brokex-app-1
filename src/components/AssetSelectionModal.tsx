@@ -250,14 +250,14 @@ export const AssetSelectionModal: React.FC<AssetSelectionModalProps> = ({
                     themeText={themeText}
                     themeBorder={themeBorder}
                   />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.7rem', color: themeText, lineHeight: 1 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', lineHeight: '1' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.7rem', color: themeText, lineHeight: '1' }}>
                         {pair.from}/{pair.to}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span style={{ color: themeTextMuted, fontSize: '0.5rem', fontWeight: 400 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', lineHeight: '1' }}>
+                      <span style={{ color: themeTextMuted, fontSize: '0.5rem', fontWeight: 400, lineHeight: '1' }}>
                         {pair.highestLeverage ? `${parseInt(pair.highestLeverage)}x` : '100x'}
                       </span>
                       <span style={{ fontSize: '0.45rem', fontWeight: 600, color: isOpenMarket ? buyColor : sellColor, lineHeight: '1', backgroundColor: isOpenMarket ? `${buyColor}11` : `${sellColor}11`, padding: '1px 3px', borderRadius: '2px' }}>

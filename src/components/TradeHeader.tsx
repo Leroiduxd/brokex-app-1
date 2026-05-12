@@ -26,8 +26,7 @@ export const TradeHeader = () => {
   const { getPairs } = useOstiumSubgraph();
   const { get24hChange } = usePythBenchmarks();
 
-  // NEW: View mode state (Chart vs List)
-  const [viewMode, setViewMode] = useState<'chart' | 'list'>('chart');
+
 
   const { symbol } = useParams<{ symbol?: string }>();
   const navigate = useNavigate();
@@ -402,86 +401,32 @@ export const TradeHeader = () => {
             </div>
           </div>
 
-          {/* View Mode Toggle */}
-          <div style={{ display: 'flex', backgroundColor: themeControlBg, padding: '2px', borderRadius: '4px', border: `1px solid ${themeBorder}`, height: '24px' }}>
-            <button
-              onClick={() => { setViewMode('chart'); window.dispatchEvent(new CustomEvent('trade-view-change', { detail: 'chart' })); }}
-              title="Price Chart"
-              style={{
-                backgroundColor: viewMode === 'chart' ? goldAccent : 'transparent',
-                color: viewMode === 'chart' ? '#fff' : themeTextMuted,
-                border: 'none', borderRadius: '3px', padding: '0 6px', cursor: 'pointer', transition: 'all 0.1s',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 3v18h18" /><path d="M18 17l-6-6-3 3-4-4" /></svg>
-            </button>
-            <button
-              onClick={() => { setViewMode('list'); window.dispatchEvent(new CustomEvent('trade-view-change', { detail: 'list' })); }}
-              title="Market List"
-              style={{
-                backgroundColor: viewMode === 'list' ? goldAccent : 'transparent',
-                color: viewMode === 'list' ? '#fff' : themeTextMuted,
-                border: 'none', borderRadius: '3px', padding: '0 6px', cursor: 'pointer', transition: 'all 0.1s',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>
-            </button>
-          </div>
+
         </div>
 
       </div>
 
-      {(isMenuOpen || viewMode === 'list') && document.getElementById('tvchart-container') ? (
-        createPortal(
-          <AssetSelectionModal
-            inline
-            isOpen={true}
-            onClose={() => { if (viewMode === 'chart') setIsMenuOpen(false); }}
-            pairs={pairs}
-            isLoading={isLoading}
-            groups={groups}
-            activeGroup={activeGroup}
-            setActiveGroup={setActiveGroup}
-            selectedAsset={selectedAsset}
-            setSelectedAsset={handleAssetSelect}
-            prices={prices}
-            get24hChange={get24hChange}
-            themeBorder={themeBorder}
-            themeText={themeText}
-            themeTextMuted={themeTextMuted}
-            themeControlBg={themeControlBg}
-            themeBg={themeBg}
-            buyColor={buyColor}
-            sellColor={sellColor}
-            apiRates={apiRates}
-          />,
-          document.getElementById('tvchart-container')!
-        )
-      ) : (
-        <AssetSelectionModal
-          isOpen={isMenuOpen}
-          onClose={() => setIsMenuOpen(false)}
-          pairs={pairs}
-          isLoading={isLoading}
-          groups={groups}
-          activeGroup={activeGroup}
-          setActiveGroup={setActiveGroup}
-          selectedAsset={selectedAsset}
-          setSelectedAsset={handleAssetSelect}
-          prices={prices}
-          get24hChange={get24hChange}
-          themeBorder={themeBorder}
-          themeText={themeText}
-          themeTextMuted={themeTextMuted}
-          themeControlBg={themeControlBg}
-          themeBg={themeBg}
-          buyColor={buyColor}
-          sellColor={sellColor}
-          apiRates={apiRates}
-        />
-      )}
+      <AssetSelectionModal
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        pairs={pairs}
+        isLoading={isLoading}
+        groups={groups}
+        activeGroup={activeGroup}
+        setActiveGroup={setActiveGroup}
+        selectedAsset={selectedAsset}
+        setSelectedAsset={handleAssetSelect}
+        prices={prices}
+        get24hChange={get24hChange}
+        themeBorder={themeBorder}
+        themeText={themeText}
+        themeTextMuted={themeTextMuted}
+        themeControlBg={themeControlBg}
+        themeBg={themeBg}
+        buyColor={buyColor}
+        sellColor={sellColor}
+        apiRates={apiRates}
+      />
     </>
   );
 };
